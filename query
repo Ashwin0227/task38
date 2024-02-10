@@ -1,0 +1,82 @@
+db.createCollection("users")
+db.createCollection("codekata")
+db.createCollection("attendance")
+db.createCollection("topics")
+db.createCollection("tasks")
+db.createCollection("company_drives")
+db.createCollection("mentors")
+
+// Find all the topics and tasks which are taught in the month of October:
+
+
+db.topics.find({ 
+    date: { 
+        $gte: new Date('2020-10-01'), 
+        $lte: new Date('2020-10-31') 
+    } 
+})
+
+db.tasks.find({ 
+    date: { 
+        $gte: new Date('2020-10-01'), 
+        $lte: new Date('2020-10-31') 
+    } 
+})
+// Find all the company drives which appeared between 15-Oct-2020 and 31-Oct-2020:
+
+
+db.company_drives.find({ 
+    date: { 
+        $gte: new Date('2020-10-15'), 
+        $lte: new Date('2020-10-31') 
+    } 
+})
+// Find all the company drives and students who appeared for the placement:
+
+
+db.company_drives.aggregate([
+    {
+        $lookup: {
+            from: "attendance",
+            localField: "_id",
+            foreignField: "drive_id",
+            as: "attendance"
+        }
+    },
+    {
+        $match: {
+            "attendance.appeared": true
+        }
+    }
+])
+// Find the number of problems solved by the user in codekata:
+
+
+db.codekata.aggregate([
+    {
+        $match: {
+            user_id: "<user_id>"
+        }
+    },
+    {
+        $group: {
+            _id: null,
+            totalProblemsSolved: { $sum: "$problems_solved" }
+        }
+    }
+])
+// Find all the mentors with a mentee count more than 15:
+
+
+db.mentors.find({ mentee_count: { $gt: 15 } })
+// Find the number of users who are absent and task is not submitted between 15-Oct-2020 and 31-Oct-2020:
+
+
+db.attendance.find({ 
+    date: { 
+        $gte: new Date('2020-10-15'), 
+        $lte: new Date('2020-10-31') 
+    }, 
+    appeared: false, 
+    task_submitted: false 
+}).count()
